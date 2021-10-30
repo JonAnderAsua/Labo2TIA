@@ -70,25 +70,60 @@ class ReflexAgent(Agent):
         # Useful information you can extract from a GameState (pacman.py)
         successorGameState = currentGameState.generatePacmanSuccessor(action)
         newPos = successorGameState.getPacmanPosition()
-        newFood = successorGameState.getFood().asList()
+        newFood = successorGameState.getFood()
         newGhostStates = successorGameState.getGhostStates()
         newScaredTimes = [ghostState.scaredTimer for ghostState in newGhostStates]
 
         "*** YOUR CODE HERE ***"
 
-        distanciaFood = list(map(lambda x: 1.0 / manhattanDistance(x, newPos), newFood)) + newScaredTimes
+        # Listas de comida para comparar
+        newFoodList = newFood.asList();
+        oldFoodList = currentGameState.getFood().asList();
 
-        distanciaGhost = sys.maxsize
-        for fantasma in newGhostStates:
-            distAct = manhattanDistance(newPos,fantasma.getPosition())
-            if distAct < distanciaGhost:
-                distanciaGhost = distAct
+        # score counter
+        score = 0
+        minfood = sys.maxsize
 
+        # Listas de capsulas para comparar
+        oldCapsules = currentGameState.getCapsules();
+        newCapsules = successorGameState.getCapsules();
 
-        if distanciaGhost > 0:
-            return successorGameState.getScore() + max(distanciaFood + [0]) - 5.0 / distanciaGhost
+        # Lista de distancias de comida y fantasmas
+        foodDist = [manhattanDistance(food, newPos) for food in newFoodList]
+        ghostDist = [manhattanDistance(newPos, ghost.getPosition()) for ghost in newGhostStates]
 
-        return successorGameState.getScore() + max(distanciaFood + [0])
+        #Si el Pacman se come una comida subir el score
+        if (len(newFoodList) < len(oldFoodList)):
+            score += 1000
+
+        # Si el Pacman se come una capsula subir el score
+        if (len(newCapsules) < len(oldCapsules)):
+            score += 1000
+
+        # Si el pacman gana que devuelva el maximo
+        if successorGameState.isWin():
+            return sys.maxsize
+
+        # PACMAN STOPS -> DECREASE SCORE
+        # if action == 'Stop':
+           # score -= 100
+
+        # IF PACMAN IS TOO CLOSE TO A GHOST -> DECREASE SCORE
+        # DECREASE A LOT -> NOT TO LOSE IT IS IMPORTANT
+        for oneGhostDist in ghostDist:
+            if oneGhostDist < 4:
+                score -= 1000000
+
+        #Calcular la distancia minima a la comida
+        for oneFoodDist in foodDist:
+            if oneFoodDist < minfood:
+                minfood = oneFoodDist
+
+        score += 10000 - minfood
+
+        # RETURN TOTAL SCORE
+        return score
+        return successorGameState.getScore()
 
 def scoreEvaluationFunction(currentGameState):
     """
