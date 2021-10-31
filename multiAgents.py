@@ -77,16 +77,16 @@ class ReflexAgent(Agent):
         "*** YOUR CODE HERE ***"
 
         # Listas de comida para comparar
-        newFoodList = newFood.asList();
-        oldFoodList = currentGameState.getFood().asList();
+        newFoodList = newFood.asList()
+        oldFoodList = currentGameState.getFood().asList()
 
         # score counter
         score = 0
         minfood = sys.maxsize
 
         # Listas de capsulas para comparar
-        oldCapsules = currentGameState.getCapsules();
-        newCapsules = successorGameState.getCapsules();
+        oldCapsules = currentGameState.getCapsules()
+        newCapsules = successorGameState.getCapsules()
 
         # Lista de distancias de comida y fantasmas
         foodDist = [manhattanDistance(food, newPos) for food in newFoodList]
@@ -98,20 +98,19 @@ class ReflexAgent(Agent):
 
         # Si el Pacman se come una capsula subir el score
         if (len(newCapsules) < len(oldCapsules)):
-            score += 1000
+            score += 10000
 
         # Si el pacman gana que devuelva el maximo
         if successorGameState.isWin():
             return sys.maxsize
 
-        # PACMAN STOPS -> DECREASE SCORE
-        # if action == 'Stop':
-           # score -= 100
+        # A penalizar si está quieto
+        if action == 'Stop':
+           score -= 100
 
-        # IF PACMAN IS TOO CLOSE TO A GHOST -> DECREASE SCORE
-        # DECREASE A LOT -> NOT TO LOSE IT IS IMPORTANT
+        # Si el pacman está muy cerca hay que bajar el score
         for oneGhostDist in ghostDist:
-            if oneGhostDist < 4:
+            if oneGhostDist < 3: # Haciendo pruebas
                 score -= 1000000
 
         #Calcular la distancia minima a la comida
@@ -123,7 +122,7 @@ class ReflexAgent(Agent):
 
         # RETURN TOTAL SCORE
         return score
-        return successorGameState.getScore()
+        #return successorGameState.getScore()
 
 def scoreEvaluationFunction(currentGameState):
     """
