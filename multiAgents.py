@@ -190,12 +190,35 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
     Your minimax agent with alpha-beta pruning (question 3)
     """
 
+    def maxValue(self, state, alpha, beta):
+        v = 1 - sys.maxsize #No sé como poner el - infinito así que por ahora se queda así
+        for accion in state.getLegalActions(0): #Con el 0 se coge la posición del pacman
+            for sucesor in state.generatePacmanSuccessor(accion):
+                v = max(v, self.minValue(sucesor,alpha,beta))
+                if v >= beta:
+                    return v
+                alpha = max(alpha,v)
+        return v
+
+    def minValue(self, state, alpha, beta):
+        v = sys.maxsize #No sé como poner el - infinito así que por ahora se queda así
+        for accion in state.getLegalActions(0): #Con el 0 se coge la posición del pacman
+            for sucesor in state.generatePacmanSuccessor(accion):
+                v = min(v, self.maxValue(sucesor,alpha,beta))
+                if v <= alpha:
+                    return v
+                beta = min(beta,v)
+        return v
+
     def getAction(self, gameState):
         """
         Returns the minimax action using self.depth and self.evaluationFunction
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        alpha = 1 - sys.maxsize
+        beta = sys.maxsize
+        return self.maxValue(gameState,alpha,beta)
+
 
 class ExpectimaxAgent(MultiAgentSearchAgent):
     """
