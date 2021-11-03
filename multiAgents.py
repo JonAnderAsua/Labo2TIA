@@ -12,8 +12,10 @@
 # Pieter Abbeel (pabbeel@cs.berkeley.edu).
 
 
+from typing import GenericMeta
+from pacman import GameState
 from util import manhattanDistance
-from game import Directions
+from game import Actions, Directions
 import random, util
 
 from game import Agent
@@ -74,6 +76,7 @@ class ReflexAgent(Agent):
         newScaredTimes = [ghostState.scaredTimer for ghostState in newGhostStates]
 
         "*** YOUR CODE HERE ***"
+
         return successorGameState.getScore()
 
 def scoreEvaluationFunction(currentGameState):
@@ -111,7 +114,44 @@ class MinimaxAgent(MultiAgentSearchAgent):
     Your minimax agent (question 2)
     """
 
+
+    def maximo(self,gameState):
+        action = gameState.getLegalActions(0)#no index perchè guardo un solo pacman
+        v = 1 - sys.maxValue
+        for a in action:
+            successor= gameState.generateSuccessor(0,a)#a azione della lista
+            v = max(v,value(successor,1))
+
+
+
+
+
+    def minimo(self,gameState,index):
+        action = gameState.getLegalActions(index)#molti fantasmi
+        v = sys.maxValue
+        for a in action:
+            successor= gameState.generateSuccessor(0,a)#a azione della lista
+            v = max(v,value(successor,1))
+
+    def value(gameState,index,depth):
+        action = gameState.getLegalActions(index)
+        agents = gameState.getNumAgents()
+
+        if index == 0:
+            depth += 1
+
+        if index > agents:
+            index = 0  #perchè non posso prendere più persone
+
+        if not action or  depth == self.depth() + 1:
+            return self.evaluationFunction(gameState)
+        elif index == 0:
+            self.maximo(gameState)
+        else:
+            self.minimo(gameState,index)
+
     def getAction(self, gameState):
+
         """
         Returns the minimax action from the current gameState using self.depth
         and self.evaluationFunction.
@@ -135,7 +175,10 @@ class MinimaxAgent(MultiAgentSearchAgent):
         Returns whether or not the game state is a losing state
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        self.maximo(gameState)
+    
+
+        
 
 class AlphaBetaAgent(MultiAgentSearchAgent):
     """
