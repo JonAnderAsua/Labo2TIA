@@ -17,6 +17,7 @@ from pacman import GameState
 from util import manhattanDistance
 from game import Actions, Directions
 import random, util
+import sys
 
 from game import Agent
 
@@ -77,7 +78,53 @@ class ReflexAgent(Agent):
 
         "*** YOUR CODE HERE ***"
 
-        return successorGameState.getScore()
+        # Listas de comida para comparar
+        newFoodList = newFood.asList()
+        oldFoodList = currentGameState.getFood().asList()
+
+        # score counter
+        score = 0
+        minfood = sys.maxsize
+
+        # Listas de capsulas para comparar
+        oldCapsules = currentGameState.getCapsules()
+        newCapsules = successorGameState.getCapsules()
+
+        # Lista de distancias de comida y fantasmas
+        foodDist = [manhattanDistance(food, newPos) for food in newFoodList]
+        ghostDist = [manhattanDistance(newPos, ghost.getPosition()) for ghost in newGhostStates]
+
+        #Si el Pacman se come una comida subir el score
+        if (len(newFoodList) < len(oldFoodList)):
+            score += 1000
+
+        # Si el Pacman se come una capsula subir el score
+        if (len(newCapsules) < len(oldCapsules)):
+            score += 10000
+
+        # Si el pacman gana que devuelva el maximo
+        if successorGameState.isWin():
+            return sys.maxsize
+
+        # A penalizar si está quieto
+        if action == 'Stop':
+           score -= 100
+
+        # Si el pacman está muy cerca hay que bajar el score
+        for oneGhostDist in ghostDist:
+            if oneGhostDist < 3: # Haciendo pruebas
+                score -= 1000000
+
+        #Calcular la distancia minima a la comida
+        for oneFoodDist in foodDist:
+            if oneFoodDist < minfood:
+                minfood = oneFoodDist
+
+        score += 10000 - minfood
+
+        # RETURN TOTAL SCORE
+        return score
+        #return successorGameState.getScore()
 
 def scoreEvaluationFunction(currentGameState):
     """
@@ -122,10 +169,6 @@ class MinimaxAgent(MultiAgentSearchAgent):
             successor= gameState.generateSuccessor(0,a)#a azione della lista
             v = max(v,value(successor,1))
 
-
-
-
-
     def minimo(self,gameState,index):
         action = gameState.getLegalActions(index)#molti fantasmi
         v = sys.maxValue
@@ -133,7 +176,7 @@ class MinimaxAgent(MultiAgentSearchAgent):
             successor= gameState.generateSuccessor(0,a)#a azione della lista
             v = max(v,value(successor,1))
 
-    def value(gameState,index,depth):
+    def value(self,gameState,index,depth):#aggiungo self?
         action = gameState.getLegalActions(index)
         agents = gameState.getNumAgents()
 
@@ -141,7 +184,7 @@ class MinimaxAgent(MultiAgentSearchAgent):
             depth += 1
 
         if index > agents:
-            index = 0  #perchè non posso prendere più persone
+            index = 0  #perchè non posso prendere più personaggi rispetto a quelli presenti nel gioco
 
         if not action or  depth == self.depth() + 1:
             return self.evaluationFunction(gameState)
@@ -176,6 +219,7 @@ class MinimaxAgent(MultiAgentSearchAgent):
         """
         "*** YOUR CODE HERE ***"
         self.maximo(gameState)
+        
     
 
         
@@ -185,12 +229,35 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
     Your minimax agent with alpha-beta pruning (question 3)
     """
 
+    def maxValue(self, state, alpha, beta, agente):
+        v = 1 - sys.maxsize #No sé como poner el - infinito así que por ahora se queda así
+        for accion in state.getLegalActions(0): #Con el 0 se coge la posición del pacman
+            sucesor = state.generateSuccessor(0,accion)
+            v = max(v, self.minValue(sucesor,alpha,beta, agente + 1))
+            if v >= beta:
+                return v
+            alpha = max(alpha,v)
+        return v
+
+    def minValue(self, state, alpha, beta, agente):
+        v = sys.maxsize #No sé como poner el - infinito así que por ahora se queda así
+        for accion in state.getLegalActions(0): #Con el 0 se coge la posición del pacman
+            sucesor = state.generateSuccessor(accion,1)
+            v = min(v, self.maxValue(sucesor,alpha,beta, agente + 1))
+            if v <= alpha:
+                return v
+            beta = min(beta,v)
+        return v
+
     def getAction(self, gameState):
         """
         Returns the minimax action using self.depth and self.evaluationFunction
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        alpha = 1 - sys.maxsize
+        beta = sys.maxsize
+        return self.maxValue(gameState,alpha,beta,0)
+
 
 class ExpectimaxAgent(MultiAgentSearchAgent):
     """
