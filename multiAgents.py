@@ -80,7 +80,6 @@ class ReflexAgent(Agent):
         newFoodList = newFood.asList()
         oldFoodList = currentGameState.getFood().asList()
 
-        # score counter
         score = 0
         minfood = sys.maxsize
 
@@ -92,6 +91,10 @@ class ReflexAgent(Agent):
         foodDist = [manhattanDistance(food, newPos) for food in newFoodList]
         ghostDist = [manhattanDistance(newPos, ghost.getPosition()) for ghost in newGhostStates]
 
+        # Si el pacman gana que devuelva el maximo
+        if successorGameState.isWin():
+            return sys.maxsize
+
         #Si el Pacman se come una comida subir el score
         if (len(newFoodList) < len(oldFoodList)):
             score += 1000
@@ -99,10 +102,6 @@ class ReflexAgent(Agent):
         # Si el Pacman se come una capsula subir el score
         if (len(newCapsules) < len(oldCapsules)):
             score += 10000
-
-        # Si el pacman gana que devuelva el maximo
-        if successorGameState.isWin():
-            return sys.maxsize
 
         # A penalizar si está quieto
         if action == 'Stop':
@@ -133,6 +132,7 @@ def scoreEvaluationFunction(currentGameState):
     (not reflex agents).
     """
     return currentGameState.getScore()
+
 
 class MultiAgentSearchAgent(Agent):
     """
@@ -190,25 +190,54 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
     Your minimax agent with alpha-beta pruning (question 3)
     """
 
-    def maxValue(self, state, alpha, beta, agente):
+    def maxValue(self, state, alpha, beta, agente,depth):
         v = 1 - sys.maxsize #No sé como poner el - infinito así que por ahora se queda así
-        for accion in state.getLegalActions(0): #Con el 0 se coge la posición del pacman
+        acciones = state.getLegalActions(0)
+
+        for accion in acciones: #Con el 0 se coge la posición del pacman
             sucesor = state.generateSuccessor(0,accion)
-            v = max(v, self.minValue(sucesor,alpha,beta, agente + 1))
+            coste = self.value(sucesor,depth,alpha,beta, 1)
+
+            if coste > v:
+                v = coste
+
             if v >= beta:
                 return v
             alpha = max(alpha,v)
         return v
 
-    def minValue(self, state, alpha, beta, agente):
-        v = sys.maxsize #No sé como poner el - infinito así que por ahora se queda así
-        for accion in state.getLegalActions(0): #Con el 0 se coge la posición del pacman
-            sucesor = state.generateSuccessor(accion,1)
-            v = min(v, self.maxValue(sucesor,alpha,beta, agente + 1))
+    def minValue(self, state, alpha, beta, agente, depth):
+        v = sys.maxsize
+        acciones = state.getLegalActions(agente)
+
+        for accion in acciones: #Con el 0 se coge la posición del pacman
+            sucesor = state.generateSuccessor(agente,accion)
+            coste = self.value(sucesor,depth,alpha,beta,agente+1)
+
+            if coste < v:
+                v = coste
+
             if v <= alpha:
                 return v
             beta = min(beta,v)
         return v
+
+    def value(self,gameState,depth,alpha,beta,index):
+        agentes = gameState.getNumAgents()
+
+        if agentes == index:
+            index = 0
+            depth += 1
+
+        acciones = gameState.getLegalActions(index)
+
+        if depth > self.depth or not acciones:
+            return self.evaluationFunction(gameState)
+        else: # state, alpha, beta, agente,depth
+            if index == 0: # Si es un pacman
+                return self.maxValue(gameState,alpha,beta,index,depth)
+            else: # Si es un fantasma
+                return self.minValue(gameState,alpha,beta,index,depth)
 
     def getAction(self, gameState):
         """
@@ -217,7 +246,20 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
         "*** YOUR CODE HERE ***"
         alpha = 1 - sys.maxsize
         beta = sys.maxsize
-        return self.maxValue(gameState,alpha,beta,0)
+
+        acciones = gameState.getLegalActions(0)
+        accionOptima = None
+
+        coste = - 1000000000000000000
+
+        if acciones:
+            for a in acciones:
+                aux = self.value(gameState.generateSuccessor(0,a),1,alpha,beta,1)
+                if aux > coste:
+                    accionOptima = a
+                    coste = aux
+        return accionOptima
+
 
 
 class ExpectimaxAgent(MultiAgentSearchAgent):
