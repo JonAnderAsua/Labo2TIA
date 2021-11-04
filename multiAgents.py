@@ -101,11 +101,11 @@ class ReflexAgent(Agent):
 
         # Si el Pacman se come una capsula subir el score
         if (len(newCapsules) < len(oldCapsules)):
-            score += 10000
+            score += 100000
 
         # A penalizar si está quieto
         if action == 'Stop':
-           score -= 100
+           score -= 1000
 
         # Si el pacman está muy cerca hay que bajar el score
         for oneGhostDist in ghostDist:
@@ -117,11 +117,10 @@ class ReflexAgent(Agent):
             if oneFoodDist < minfood:
                 minfood = oneFoodDist
 
-        score += 10000 - minfood
+        score += 1000 - minfood
 
         # RETURN TOTAL SCORE
         return score
-        #return successorGameState.getScore()
 
 def scoreEvaluationFunction(currentGameState):
     """
@@ -196,11 +195,8 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
 
         for accion in acciones: #Con el 0 se coge la posición del pacman
             sucesor = state.generateSuccessor(0,accion)
-            coste = self.value(sucesor,depth,alpha,beta, 1)
 
-            if coste > v:
-                v = coste
-
+            v = max(v,self.value(sucesor,depth,alpha,beta, 1))
             if v >= beta:
                 return v
             alpha = max(alpha,v)
@@ -212,11 +208,8 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
 
         for accion in acciones: #Con el 0 se coge la posición del pacman
             sucesor = state.generateSuccessor(agente,accion)
-            coste = self.value(sucesor,depth,alpha,beta,agente+1)
 
-            if coste < v:
-                v = coste
-
+            v = min(v, self.value(sucesor,depth,alpha,beta,agente+1))
             if v <= alpha:
                 return v
             beta = min(beta,v)
@@ -250,12 +243,12 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
         acciones = gameState.getLegalActions(0)
         accionOptima = None
 
-        coste = - 1000000000000000000
+        coste = 1 - sys.maxsize
 
         if acciones:
             for a in acciones:
                 aux = self.value(gameState.generateSuccessor(0,a),1,alpha,beta,1)
-                if aux > coste:
+                if aux < coste:
                     accionOptima = a
                     coste = aux
         return accionOptima
