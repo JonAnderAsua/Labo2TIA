@@ -161,36 +161,36 @@ class MinimaxAgent(MultiAgentSearchAgent):
     """
 
 
-    def maximo(self,gameState):
+    def maximo(self,gameState,depth):
         action = gameState.getLegalActions(0)#no index perchè guardo un solo pacman
-        v = 1 - sys.maxValue
+        v = 1 - sys.maxsize
         for a in action:
             successor= gameState.generateSuccessor(0,a)#a azione della lista
-            v = max(v,self.value(successor,1))
+            v = max(v,self.value(successor, 1, depth))
+        return v
 
-    def minimo(self,gameState,index):
+    def minimo(self,gameState,index,depth):
         action = gameState.getLegalActions(index)#molti fantasmi
-        v = sys.maxValue
+        v = sys.maxsize
         for a in action:
-            successor= gameState.generateSuccessor(0,a)#a azione della lista
-            v = max(v,self.value(successor,1))
+            successor= gameState.generateSuccessor(index,a)#a azione della lista
+            v = min(v, self.value(successor, index + 1, depth))
+        return v
 
     def value(self,gameState,index,depth):#aggiungo self?
-        action = gameState.getLegalActions(index)
         agents = gameState.getNumAgents()
 
-        if index == 0:
+        if index == agents:
+            index = 0  #perchè non posso prendere più personaggi rispetto a quelli presenti nel gioco
             depth += 1
 
-        if index > agents:
-            index = 0  #perchè non posso prendere più personaggi rispetto a quelli presenti nel gioco
-
-        if not action or  depth == self.depth() + 1:
+        if depth > self.depth or gameState.isWin() or gameState.isLose():
             return self.evaluationFunction(gameState)
-        elif index == 0:
-            self.maximo(gameState)
         else:
-            self.minimo(gameState,index)
+            if index == 0:
+                return self.maximo(gameState, depth)
+            else:
+                return self.minimo(gameState, index, depth)
 
     def getAction(self, gameState):
 
@@ -217,10 +217,20 @@ class MinimaxAgent(MultiAgentSearchAgent):
         Returns whether or not the game state is a losing state
         """
         "*** YOUR CODE HERE ***"
-        self.maximo(gameState)
-        
-    
+        action = gameState.getLegalActions(0)
 
+        costeMax = 1 - sys.maxsize
+        accionOptima = None
+
+        for a in action:
+            successor = gameState.generateSuccessor(0, a)
+            v = self.value(successor, 1, 1)
+
+            if v > costeMax:
+                costeMax = v
+                accionOptima = a
+
+        return accionOptima
         
 
 class AlphaBetaAgent(MultiAgentSearchAgent):
@@ -375,7 +385,31 @@ def betterEvaluationFunction(currentGameState):
     DESCRIPTION: <write something here so we know what you did>
     """
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    # distance to the closest food
+    newPos = currentGameState.getPacmanPosition()
+    newFood = currentGameState.getFood()
+    newFoodList = newFood.asList()
+    min_food_distance = -1
+    for food in newFoodList:
+        distance = util.manhattanDistance(newPos, food)
+        if min_food_distance >= distance or min_food_distance == -1:
+            min_food_distance = distance
+
+    # distances from pacman to the ghosts
+    distances_to_ghosts = 1
+    proximity_to_ghosts = 0
+    for ghost_state in currentGameState.getGhostPositions():
+        distance = util.manhattanDistance(newPos, ghost_state)
+        distances_to_ghosts += distance
+        if distance <= 1:  # checking for the proximity of the ghosts
+            proximity_to_ghosts += 1
+
+    """Obtaining the number of capsules available"""
+    newCapsule = currentGameState.getCapsules()
+    numberOfCapsules = len(newCapsule)
+
+    """Combination of the above calculated metrics."""
+    return currentGameState.getScore() + (1 / float(min_food_distance)) - (1 / float(distances_to_ghosts)) - proximity_to_ghosts - numberOfCapsules
 
 # Abbreviation
 better = betterEvaluationFunction
