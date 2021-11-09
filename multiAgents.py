@@ -390,6 +390,7 @@ def betterEvaluationFunction(currentGameState):
     newFood = currentGameState.getFood()
     newFoodList = newFood.asList()
     min_food_distance = -1
+    score = currentGameState.getScore()
     for food in newFoodList:
         distance = util.manhattanDistance(newPos, food)
         if min_food_distance >= distance or min_food_distance == -1:
@@ -408,8 +409,17 @@ def betterEvaluationFunction(currentGameState):
     newCapsule = currentGameState.getCapsules()
     numberOfCapsules = len(newCapsule)
 
+    # Una vez conseguido all se va a modificar el score
+
+    score += (1 / float(min_food_distance))
+    score -= (1 / float(distances_to_ghosts))
+    score -= proximity_to_ghosts
+    score -= numberOfCapsules
+
+    return score
+
     """Combination of the above calculated metrics."""
-    return currentGameState.getScore() + (1 / float(min_food_distance)) - (1 / float(distances_to_ghosts)) - proximity_to_ghosts - numberOfCapsules
+    # return currentGameState.getScore() + (1 / float(min_food_distance)) - (1 / float(distances_to_ghosts)) - proximity_to_ghosts - numberOfCapsules
 
 # Abbreviation
 better = betterEvaluationFunction
