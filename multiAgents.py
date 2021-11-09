@@ -418,8 +418,5 @@ def betterEvaluationFunction(currentGameState):
 
     return score
 
-    """Combination of the above calculated metrics."""
-    # return currentGameState.getScore() + (1 / float(min_food_distance)) - (1 / float(distances_to_ghosts)) - proximity_to_ghosts - numberOfCapsules
-
 # Abbreviation
 better = betterEvaluationFunction
